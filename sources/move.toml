@@ -1,9 +1,0 @@
-[package]
-name = "snc_contract"
-version = "0.0.1"
-
-[dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "testnet" }
-
-[addresses]
-snc_contract = "0x0"
