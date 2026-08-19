@@ -6,19 +6,34 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # Dùng Ubuntu 22.04 thay vì 24 (vì 24 chưa được test kỹ)
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4  # Nâng lên v4 để tương thích Node 22
 
-      - name: Install Sui CLI
+      - name: Install Sui CLI via cargo
         run: |
-          curl -fsSL https://raw.githubusercontent.com/MystenLabs/sui/main/scripts/sui-install.sh | sh
-          echo "$HOME/.sui/bin" >> $GITHUB_PATH
+          sudo apt-get update
+          sudo apt-get install -y curl build-essential pkg-config libssl-dev
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Verify Sui installation
+        run: |
+          sui --version
 
       - name: Configure Sui client
         run: |
+          # Tạo ví mới và lấy địa chỉ
           sui client new-address ed25519
-          sui client switch --address $(sui client addresses | head -1)
+          ADDRESS=$(sui client active-address)
+          echo "Active address: $ADDRESS"
+          # Lưu địa chỉ vào output để dùng sau
+          echo "Sui address: $ADDRESS"
+        env:
+          SUI_PRIVATE_KEY: ${{ secrets.SUI_PRIVATE_KEY }}  # Nếu bạn có secret, có thể dùng
 
       - name: Publish contract
         run: |
